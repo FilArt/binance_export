@@ -9,8 +9,9 @@ from binance.client import Client
 
 from exchange.data import get_btc_symbols, SymbolData, normalize_row
 from config import (
-    API_KEY, API_SECRET, MAX_CONCURRENCY_BINANCE_TASK, MAX_CONCURRENCY_GOOGLE_SHEET_TASK, CREDS_PATH, UPDATE_INTERVAL
-)
+    API_KEY, API_SECRET, MAX_CONCURRENCY_BINANCE_TASK, MAX_CONCURRENCY_GOOGLE_SHEET_TASK, CREDS_PATH, UPDATE_INTERVAL,
+    DOCUMENT_NAME,
+    SHARE_TO_EMAIL)
 
 logging.basicConfig(format='%(levelname)s - %(asctime)s - %(name)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger('main')
@@ -31,7 +32,8 @@ binance_client = Client(API_KEY, API_SECRET)
 
 symbols = get_btc_symbols(binance_client)
 
-spread_sheet = google_client.open('test_doc2')
+spread_sheet = google_client.open(DOCUMENT_NAME)
+spread_sheet.share(SHARE_TO_EMAIL, role='user', perm_type='writer')
 
 
 async def process_symbol(symbol, b_sem):
