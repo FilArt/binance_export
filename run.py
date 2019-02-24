@@ -33,7 +33,7 @@ binance_client = Client(API_KEY, API_SECRET)
 symbols = get_btc_symbols(binance_client)
 
 spread_sheet = google_client.open(DOCUMENT_NAME)
-spread_sheet.share(SHARE_TO_EMAIL, role='user', perm_type='writer')
+spread_sheet.share(SHARE_TO_EMAIL, perm_type='user', role='writer')
 
 
 async def process_symbol(symbol, b_sem):
