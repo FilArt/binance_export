@@ -2,7 +2,7 @@ import asyncio
 import logging
 
 import gspread
-from gspread import WorksheetNotFound
+from gspread import WorksheetNotFound, SpreadsheetNotFound
 from oauth2client.service_account import ServiceAccountCredentials
 
 from binance.client import Client
@@ -32,7 +32,11 @@ binance_client = Client(API_KEY, API_SECRET)
 
 symbols = get_btc_symbols(binance_client)
 
-spread_sheet = google_client.open(DOCUMENT_NAME)
+try:
+    spread_sheet = google_client.open(DOCUMENT_NAME)
+except SpreadsheetNotFound:
+    spread_sheet = google_client.create(DOCUMENT_NAME)
+
 spread_sheet.share(SHARE_TO_EMAIL, perm_type='user', role='writer')
 
 
