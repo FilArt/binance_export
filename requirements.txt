@@ -1,0 +1,4 @@
+arrow
+python-binance
+oauth2client
+gspread
