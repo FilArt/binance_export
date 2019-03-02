@@ -4,14 +4,13 @@ from datetime import datetime
 
 import gspread
 from binance.client import Client
-from gspread import SpreadsheetNotFound, WorksheetNotFound
-from oauth2client.service_account import ServiceAccountCredentials
-
 from config import (API_KEY, API_SECRET, CREDS_PATH, DOCUMENT_NAME,
                     MAX_CONCURRENCY_BINANCE_TASK,
                     MAX_CONCURRENCY_GOOGLE_SHEET_TASK, SHARE_TO_EMAIL,
                     UPDATE_INTERVAL)
 from exchange.data import SymbolData, get_btc_symbols, normalize_row
+from gspread import SpreadsheetNotFound, WorksheetNotFound
+from oauth2client.service_account import ServiceAccountCredentials
 
 logging.basicConfig(format='%(levelname)s - %(asctime)s - %(name)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger('main')
@@ -104,7 +103,6 @@ async def main():
 
     worksheets = [
         prepare_worksheet(symbol, google_semaphore)
-
         for symbol in symbols
     ]
 
@@ -130,7 +128,6 @@ async def main():
         extra_time = start_time + UPDATE_INTERVAL - end_time
 
         if extra_time > 0:
-            extra_time = 60 - datetime.now().second
             logger.info('Next update will be in {} seconds'.format(extra_time))
             await asyncio.sleep(extra_time)
 
