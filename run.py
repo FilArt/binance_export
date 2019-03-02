@@ -63,8 +63,10 @@ async def prepare_worksheet(symbol, sem):
 
 
 def _create_request(s_id, rows):
+    requests = []
     for row in rows:
-        yield {'insertRange': {
+        requests.extend((
+            {'insertRange': {
                 'range': {
                     "sheetId": s_id,
                     "startRowIndex": 0,
@@ -73,9 +75,8 @@ def _create_request(s_id, rows):
                     "endColumnIndex": 7,
                 },
                 'shiftDimension': 'ROWS',
-            }}
-
-        yield {'pasteData': {
+            }},
+            {'pasteData': {
                 'coordinate': {
                     'sheetId': s_id,
                     'rowIndex': 0,
@@ -85,6 +86,7 @@ def _create_request(s_id, rows):
                 'type': 'PASTE_NORMAL',
                 'delimiter': '_',
             }}
+        ))
 
 
 def export_data(worksheets, exchange_data):
