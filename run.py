@@ -87,6 +87,7 @@ def _create_request(s_id, rows):
                 'delimiter': '_',
             }}
         ))
+    return requests
 
 
 def export_data(worksheets, exchange_data):
