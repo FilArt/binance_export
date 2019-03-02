@@ -1,17 +1,17 @@
 import asyncio
 import logging
+from datetime import datetime
 
 import gspread
-from gspread import WorksheetNotFound, SpreadsheetNotFound
+from binance.client import Client
+from gspread import SpreadsheetNotFound, WorksheetNotFound
 from oauth2client.service_account import ServiceAccountCredentials
 
-from binance.client import Client
-
-from exchange.data import get_btc_symbols, SymbolData, normalize_row
-from config import (
-    API_KEY, API_SECRET, MAX_CONCURRENCY_BINANCE_TASK, MAX_CONCURRENCY_GOOGLE_SHEET_TASK, CREDS_PATH, UPDATE_INTERVAL,
-    DOCUMENT_NAME,
-    SHARE_TO_EMAIL)
+from config import (API_KEY, API_SECRET, CREDS_PATH, DOCUMENT_NAME,
+                    MAX_CONCURRENCY_BINANCE_TASK,
+                    MAX_CONCURRENCY_GOOGLE_SHEET_TASK, SHARE_TO_EMAIL,
+                    UPDATE_INTERVAL)
+from exchange.data import SymbolData, get_btc_symbols, normalize_row
 
 logging.basicConfig(format='%(levelname)s - %(asctime)s - %(name)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger('main')
@@ -63,32 +63,39 @@ async def prepare_worksheet(symbol, sem):
     return symbol, worksheet
 
 
-def _create_rows(rows):
-    result = []
-    for row in rows:
-        result.append({
-            'values': [
-                {'userEnteredValue': {'stringValue': str(v)}}
-                for v in normalize_row(row)
-            ]
-        })
-    return result
-
-
 def _create_request(s_id, rows):
-    return {'appendCells': {
-        'sheetId': s_id,
-        'rows': _create_rows(rows),
-        'fields': '*',
-    }}
+    for row in rows:
+        yield {'insertRange': {
+                'range': {
+                    "sheetId": s_id,
+                    "startRowIndex": 0,
+                    "endRowIndex": 1,
+                    "startColumnIndex": 0,
+                    "endColumnIndex": 7,
+                },
+                'shiftDimension': 'ROWS',
+            }}
+
+        yield {'pasteData': {
+                'coordinate': {
+                    'sheetId': s_id,
+                    'rowIndex': 0,
+                    'columnIndex': 0,
+                },
+                'data': '_'.join([str(item) for item in normalize_row(row)]),
+                'type': 'PASTE_NORMAL',
+                'delimiter': '_',
+            }}
 
 
 def export_data(worksheets, exchange_data):
-    requests = {'requests': [
-        _create_request(worksheets[s].id, data)
-        for s, data in exchange_data
-    ]}
-    spread_sheet.batch_update(requests)
+    request_body = []
+    for s, data in exchange_data:
+        request_body.extend(_create_request(worksheets[s].id, data))
+
+    batch_requests = {'requests': request_body}
+
+    spread_sheet.batch_update(batch_requests)
 
 
 async def main():
@@ -123,6 +130,7 @@ async def main():
         extra_time = start_time + UPDATE_INTERVAL - end_time
 
         if extra_time > 0:
+            extra_time = 60 - datetime.now().second
             logger.info('Next update will be in {} seconds'.format(extra_time))
             await asyncio.sleep(extra_time)
 
